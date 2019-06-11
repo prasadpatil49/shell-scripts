@@ -1,0 +1,53 @@
+source_host="172.24.29.42"
+dest_host="172.24.47.113"
+rsync_user="prasad"
+source_dir="/home/prasad/"
+dest_dir="/home/prasad/"
+pid_file="/tmp/rsync_pid"
+
+log_file="/var/rsync_logs/rsync_`date +%d-%m-%Y`.log"
+#exclude_dir="--exclude \"/home/prasad/.ssh/*\" "
+
+
+#creating log file
+
+touch $log_file
+touch $pid_file
+chmod 644 $log_file
+
+
+if [[ $(cat /tmp/rsync_pid | wc -l) == 0 || $(ps $(cat /tmp/rsync_pid) | wc -l) == 1  ]];
+then
+
+echo $$ > $pid_file
+
+echo -e "\n\nStarting rsync to $dest_host:$dest_dir" >> $log_file
+date >> $log_file
+
+
+#rsync command
+
+rsync -avzH --delete-before --exclude-from "exclude_list.txt"  $source_dir $rsync_user@$dest_host:$dest_dir >> $log_file
+
+err_code=$?
+
+if [[ $err_code -ne 0 && $err_code -ne 24 ]]
+then
+
+echo "Error in rsync code:  $err_code"
+
+fi
+
+
+date >> $log_file
+
+
+echo "PID:- $$"
+ps $$
+
+else
+
+echo "rsync running"
+fi
+
+

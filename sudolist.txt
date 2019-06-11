@@ -1,0 +1,22 @@
+if [ "$(uname)" == "Linux" ]
+then
+
+echo "" > /tmp/`hostname`_sudoacess.txt
+
+echo -e "\n`hostname`   DC\n" >> /tmp/`hostname`_sudoacess.txt
+grep -i "l3:" /etc/group >> /tmp/`hostname`_sudoacess.txt
+
+
+fi
+
+if [ "$(uname)" == "AIX" ]
+then
+
+echo "" > /tmp/`hostname`_sudoacess.txt
+
+echo "\n`hostname`   DC\n" >> /tmp/`hostname`_sudoacess.txt
+grep -i "level_2:" /etc/group >> /tmp/`hostname`_sudoacess.txt
+grep -i "level2:" /etc/group >> /tmp/`hostname`_sudoacess.txt
+
+
+fi

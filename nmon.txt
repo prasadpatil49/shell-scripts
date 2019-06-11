@@ -1,0 +1,1 @@
+echo "$(hostname)   $(ifconfig -a |egrep "172|128" | awk '{print $2}' | head -1 |cut -d ":" -f2)    $(grep -e "^KEEPDAYS" /usr/bin/nmon-script)"  > /tmp/`hostname`_nmon_days.txt

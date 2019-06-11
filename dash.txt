@@ -1,0 +1,66 @@
+if [ "$(uname)" == "Linux" ]
+then
+
+totalmem=`vmstat -s| grep "total memory" | awk '{print $1}'`
+freemem=`vmstat -s| grep "free memory" | awk '{print $1}'`
+
+buffermem=`vmstat -s| grep "buffer memory" | awk '{print $1}'`
+cachemem=`vmstat -s| grep "swap cache" | awk '{print $1}'`
+
+freemem=$((freemem+buffermem+cachemem))
+
+
+memper=`echo "scale=2; 100 -(($freemem * 100)/ $totalmem)" | bc`
+
+totalswap=`vmstat -s| grep "total swap" | awk '{print $1}'`
+usedswap=`vmstat -s| grep "used swap" | awk '{print $1}'`
+
+swapper=`echo "scale=2; (($usedswap * 100)/ $totalswap)" | bc`
+
+read cpu user nice system idle iowait irq softirq steal guest< /proc/stat
+
+# compute active and total utilizations
+cpu_active_prev=$((user+system+nice+softirq+steal))
+cpu_total_prev=$((user+system+nice+softirq+steal+idle+iowait))
+
+usleep 50000
+
+# Read /proc/stat file (for second datapoint)
+read cpu user nice system idle iowait irq softirq steal guest< /proc/stat
+
+# compute active and total utilizations
+cpu_active_cur=$((user+system+nice+softirq+steal))
+cpu_total_cur=$((user+system+nice+softirq+steal+idle+iowait))
+
+# compute CPU utilization (%)
+cpu_util=`echo "scale=2; (100* $cpu_active_cur-cpu_active_prev ) / $cpu_total_cur-cpu_total_prev" | bc `
+
+#printf " Current CPU Utilization : %s\n" "$cpu_util"
+
+echo "Detals:-  `hostname`   $cpu_util%   $memper%   $swapper%  `uname`"
+
+fi
+
+if [ "$(uname)" == "AIX" ]
+then
+
+
+cpuper=`lparstat 2 1| tail -n 1 | awk '{print $4}'`
+
+cpuper=`echo "scale =2; 100 - $cpuper" | bc`
+
+memuse=`svmon | grep memory | awk '{print $3}'`
+memtotal=`svmon | grep memory | awk '{print $2}'`
+
+memper=`echo "scale =2; (100 * $memuse )/$memtotal" | bc`
+
+
+swapuse=`svmon | grep "pg space" | awk '{print $4}'`
+swaptotal=`svmon | grep "pg space"| awk '{print $3}'`
+
+swapper=`echo "scale =2; (100 * $swapuse )/$swaptotal" | bc`
+
+echo "Detals:-  `hostname`   $cpuper%   $memper%   $swapper% `uname`"
+
+fi
+

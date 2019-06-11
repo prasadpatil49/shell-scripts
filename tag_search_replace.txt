@@ -1,0 +1,65 @@
+ls /etc/passwd_6_sep_2017_`hostname`
+
+if [ $? -eq 0 ]
+then
+echo "File already Present"
+else
+echo "Taking Backup"
+cp -p /etc/passwd /etc/passwd_6_sep_2017_`hostname`
+fi
+
+
+
+sed -i -e 's/690427/1205923/g' /etc/passwd
+
+sed -i -e 's/Machhindra Thange/Prasad Patil/gI' /etc/passwd
+
+sed -i -e 's/MachhindraThange/Prasad Patil/gI' /etc/passwd
+
+
+sed -i -e 's/718894/1205923/g' /etc/passwd
+
+sed -i -e 's/Mahesh Fulsamandar/Prasad Patil/gI' /etc/passwd
+
+sed -i -e 's/MaheshFulsamandar/Prasad Patil/gI' /etc/passwd
+
+
+
+
+
+if [ "$(uname)" == "Linux" ]
+then
+cp -p /etc/passwd /tmp/passwd_bkp
+
+sed -i -e 's/Vitthal Jamdade/Jitendra Pala/gI' /etc/passwd
+
+sed -i -e 's/695109/187684/gI' /etc/passwd
+
+sed -i -e 's/VitthalJamdade/Jitendra Pala/gI' /etc/passwd
+
+sed -i -e 's/Mgr695109/Mgr201303/gI' /etc/passwd
+
+sed -i -e 's/Mgr569682/Mgr201303/gI' /etc/passwd
+
+sed -i -e 's/Mgr323713/Mgr201303/gI' /etc/passwd
+
+sed -i -e 's/Mgr187684/Mgr201303/gI' /etc/passwd
+
+sed -i -e 's/Mgr742464/Mgr201303/gI' /etc/passwd
+
+
+fi
+
+if [ "$(uname)" == "AIX" ]
+then
+
+cp -p /etc/passwd /tmp/passwd_bkp
+
+sed 's/695109/187684/g;s/Vitthal Jamdade/Jitendra Pala/g;s/VitthalJamdade/Jitendra Pala/g;s/Mgr695109/Mgr201303/g;s/Mgr569682/Mgr201303/g;s/Mgr323713/Mgr201303/g;s/Mgr187684/Mgr201303/g;s/Mgr742464/Mgr201303/g'  /tmp/passwd_bkp > /etc/passwd
+
+
+fi
+
+
+
+

@@ -1,0 +1,75 @@
+---
+- name: password reset AIX/Linux
+  hosts: "{{ target_host }}"
+  become: true
+  become_method: sudo
+
+  tasks:
+
+    - name: Find current salt
+      shell: grep "{{user_id}}" /etc/shadow | awk -F$ '{print $3}'
+      register: salt_value
+
+    - name: current hash in shadow
+      shell: grep "{{user_id}}" /etc/shadow | awk -F":" '{print $2}'
+      register: current_hash
+
+    - name: input passowrd hash password
+      shell: python -c 'import crypt; print(crypt.crypt("{{ password }}","$6${{ salt_value.stdout }}"))'
+      register: new_hash
+      delegate_to: 127.0.0.1
+
+    - name: new password hash calculation
+      shell: python -c 'import crypt; print(crypt.crypt("{{ new_password }}", crypt.mksalt(crypt.METHOD_SHA512)))'
+      register: new_password_hash
+      delegate_to: 127.0.0.1
+
+    - name: result matched
+      debug:
+        msg: Entered current password is valid
+      when: current_hash.stdout == new_hash.stdout
+
+    - name: Error mail notification
+      mail:
+        host: telcop.pune.telco.co.in
+        port: 25
+        to: prasadp1.tcs@tatamotors.com
+        from: tdrdevops@tatamotors.com
+        subject: password reset failed
+        body: Entered current password in invalid
+      delegate_to: 127.0.0.1
+      when: current_hash.stdout != new_hash.stdout
+
+
+    - name: result not matched
+      debug:
+        msg: Entered current password is Not-valid
+      when: current_hash.stdout != new_hash.stdout
+
+    - name: reset password
+      user:
+        name: "{{ user_id }}"
+        update_password: always
+        password: "{{ new_password_hash.stdout }}"
+      ignore_errors: yes
+      register: reset_status
+      when: current_hash.stdout == new_hash.stdout
+
+    - name: reset fail attempts
+      shell: pam_tally2 -u "{{ user_id }}" -r
+      ignore_errors: yes
+
+    - name: print details
+      debug:
+        msg: "{{reset_status}}"
+
+    - name: mail notification
+      mail:
+        host: telcop.pune.telco.co.in
+        port: 25
+        to: prasadp1.tcs@tatamotors.com
+        from: tdrdevops@tatamotors.com
+        subject: password reset sucessfull
+        body: password set to "{{ new_password }}"  for user "{{ user_id }}"
+      delegate_to: 127.0.0.1
+      when: reset_status.changed

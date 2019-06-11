@@ -1,0 +1,70 @@
+user_id=`ps -ef | grep -i pmon | awk '{print $1}' | grep -v root | uniq`
+
+echo $user_id
+
+touch /home/instance_size.sh
+chmod 777 /home/instance_size.sh
+
+echo "" > /home/instance_size.sh
+
+echo "insatance_count=\`cat /etc/oratab|grep -v \"^#\"| grep -v \"^+\" | grep -v \"^$\" | wc -l\`" >> /home/instance_size.sh
+
+echo "if [ \$insatance_count -eq 0 ]" >> /home/instance_size.sh
+
+echo "then" >> /home/instance_size.sh
+
+echo "echo \"Error\"" >> /home/instance_size.sh
+
+echo "else" >> /home/instance_size.sh
+
+echo "hostname" >> /home/instance_size.sh
+echo "ifconfig -a |egrep \"172|128\" | awk '{print \$2}' | head -1 |cut -d \":\" -f2" >> /home/instance_size.sh
+echo "for i in \`cat /etc/oratab|grep -v \"^#\"| grep -v \"^+\" | grep -v \"^$\" | awk -F: '{print \$1}'\`" >> /home/instance_size.sh
+
+
+echo "do" >> /home/instance_size.sh
+
+echo "if ps -ef |  grep pmon | grep \$i > /dev/null" >>  /home/instance_size.sh
+echo "then" >> /home/instance_size.sh 
+
+
+echo "echo \$i" >> /home/instance_size.sh
+
+echo "export ORACLE_SID=\`grep \"^\$i\" /etc/oratab | awk -F: '{print \$1}'\`" >> /home/instance_size.sh
+echo "export ORACLE_HOME=\`grep \"^\$i\" /etc/oratab | awk -F: '{print \$2}'\`" >> /home/instance_size.sh
+echo "export PATH=\$ORACLE_HOME/bin:\$PATH" >> /home/instance_size.sh
+
+
+echo "sqlplus -s <<EOF" >> /home/instance_size.sh
+echo "/ as sysdba" >> /home/instance_size.sh
+
+echo "select t2.total \"TOTAL SIZE\" from (select sum(bytes)/1024/1024 total from dba_Data_files) t2;" >> /home/instance_size.sh
+
+echo "exit" >> /home/instance_size.sh
+echo "EOF" >> /home/instance_size.sh
+
+echo "fi" >> /home/instance_size.sh
+
+echo "done" >> /home/instance_size.sh
+
+echo "fi" >> /home/instance_size.sh
+
+
+if [ "$(uname)" == "Linux" ]
+then
+sudo -u $user_id /home/instance_size.sh | egrep -v 'TOTAL|-' | awk -vRS="\n" -vORS="\t" '1' > /tmp/`hostname`_db_details.txt
+
+echo -e "\n" >> /tmp/`hostname`_db_details.txt
+fi
+
+if [ "$(uname)" == "AIX" ]
+then
+
+su - $user_id -c 'sh /home/instance_size.sh' | egrep -v 'TOTAL|-' | awk -vRS="\n" -vORS="\t" '1' > /tmp/`hostname`_db_details.txt
+echo "\n" >> /tmp/`hostname`_db_details.txt
+
+
+fi
+
+
+rm -f /home/instance_size.sh
